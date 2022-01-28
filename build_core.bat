@@ -1,0 +1,1 @@
+clang -I core\inc -o bin\bmp_parser.lib core\src\*.c -fuse-ld=llvm-lib
