@@ -1,6 +1,5 @@
 #include <SDL.h>
 #include "sdl_funcs.h"
-#include <stdio.h>
 
 int main(int argc, char **argv)
 {
@@ -19,12 +18,18 @@ int main(int argc, char **argv)
 
     int w, h, channels;
     SDL_Texture *static_texture;
-    SDL_Texture *texture;
+    SDL_Texture *streaming_texture;
+    SDL_Texture *static_texture_pitch;
+    SDL_Texture *streaming_texture_pitch;
     unsigned char *pixels;
 
     if (!sdl_bmp_to_static_texture(file_data, &pixels, &w, &h, &channels, renderer, &static_texture)) goto quit;
 
-    if (!sdl_bmp_to_streaming_texture(file_data, &pixels, &w, &h, &channels, renderer, &texture)) goto quit;
+    if (!sdl_bmp_to_streaming_texture(file_data, &pixels, &w, &h, &channels, renderer, &streaming_texture)) goto quit;
+
+    if (!sdl_bmp_to_static_texture_pitch(file_data, &pixels, &w, &h, &channels, renderer, &static_texture_pitch)) goto quit;
+
+    if (!sdl_bmp_to_streaming_texture_pitch(file_data, &pixels, &w, &h, &channels, renderer, &streaming_texture_pitch)) goto quit;
 
     int offset_x = 114;
     int offset_y = 115;
@@ -45,9 +50,13 @@ int main(int argc, char **argv)
         SDL_RenderCopy(renderer, static_texture, NULL, &rect);
 
         rect.x += w + offset_x;
-        // SDL_RenderCopy(renderer, texture, NULL, &rect);
+        SDL_RenderCopy(renderer, streaming_texture, NULL, &rect);
+
+        rect.y += h + offset_y;
+        SDL_RenderCopy(renderer, streaming_texture_pitch, NULL, &rect);
 
         rect.x = offset_x;
+        SDL_RenderCopy(renderer, static_texture_pitch, NULL, &rect);
 
         SDL_RenderPresent(renderer);
     }
@@ -55,7 +64,7 @@ int main(int argc, char **argv)
 quit:
     if (window) SDL_DestroyWindow(window);
     if (renderer) SDL_DestroyRenderer(renderer);
-    if (file_data) SDL_free(file_data);
+    if (file_data) free(file_data);
     SDL_Quit();
     return 0;
 }

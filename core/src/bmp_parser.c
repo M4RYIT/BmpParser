@@ -22,6 +22,28 @@ void load_bmp(const unsigned char *file_data, unsigned char *pixels, int *w, int
     }
 }
 
+void load_bmp_pitch(const unsigned char *file_data, unsigned char *pixels, int *w, int *h, int *channels, int *pitch)
+{
+    if (!pixels)
+    {
+        bmp_dim(file_data, w, h);
+        *channels = bmp_channels;
+        return;
+    }
+
+    int row_size = (*w)*(*channels);
+    int padded_row_size = bmp_padded_row(row_size);
+    const unsigned char *head = bmp_start_point(file_data);
+    int offset = (!pitch)?row_size:*pitch;
+
+    for (int y=0; y<(*h); y++)
+    {
+        memcpy(pixels+((*h)-y-1)*offset,
+               head+y*padded_row_size,
+               row_size);
+    }
+}
+
 const unsigned char *bmp_start_point(const unsigned char *file_data)
 {
     int *offset = (int*)(file_data+10);

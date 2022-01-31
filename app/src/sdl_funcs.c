@@ -1,6 +1,5 @@
 #include <SDL.h>
 #include <string.h>
-#include <stdio.h>
 #include "sdl_funcs.h"
 #include "bmp_parser.h"
 
@@ -35,7 +34,40 @@ int sdl_bmp_to_static_texture(const unsigned char *file_data, unsigned char **pi
     load_bmp(file_data, *pixels, w, h, ch);    
 
     SDL_UpdateTexture(*tex, NULL, *pixels, (*w)*(*ch));
-    sdl_clear_pixels(*pixels);
+    free(*pixels);
+
+    return 1;
+}
+
+int sdl_bmp_to_static_texture_pitch(const unsigned char *file_data, unsigned char **pixels, int *w, int *h, int *ch, SDL_Renderer *rnd, SDL_Texture **tex)
+{
+    load_bmp_pitch(file_data, NULL, w, h, ch, NULL);
+
+    *pixels = malloc((*w)*(*h)*(*ch));
+    if (!*pixels) return 0;
+
+    *tex = SDL_CreateTexture(rnd, SDL_PIXELFORMAT_BGR24, SDL_TEXTUREACCESS_STATIC, *w, *h);
+
+    load_bmp_pitch(file_data, *pixels, w, h, ch, NULL);
+
+    SDL_UpdateTexture(*tex, NULL, *pixels, (*w)*(*ch));
+    free(*pixels);
+
+    return 1;
+}
+
+int sdl_bmp_to_streaming_texture_pitch(const unsigned char *file_data, unsigned char **pixels, int *w, int *h, int *ch, SDL_Renderer *rnd, SDL_Texture **tex)
+{
+    load_bmp_pitch(file_data, NULL, w, h, ch, NULL);
+
+    *tex = SDL_CreateTexture(rnd, SDL_PIXELFORMAT_BGR24, SDL_TEXTUREACCESS_STREAMING, *w, *h);
+
+    int pitch;
+    SDL_LockTexture(*tex, NULL, (void**)pixels, &pitch);
+
+    load_bmp_pitch(file_data, *pixels, w, h, ch, &pitch);
+
+    SDL_UnlockTexture(*tex);
 
     return 1;
 }
@@ -64,12 +96,6 @@ int sdl_bmp_to_streaming_texture(const unsigned char *file_data, unsigned char *
 
     SDL_UnlockTexture(*tex);
     free(temp_pixels);
-    sdl_clear_pixels(*pixels);
 
     return 1;
-}
-
-void sdl_clear_pixels(unsigned char *pixels)
-{
-    SDL_free(pixels);
 }
